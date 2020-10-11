@@ -21,6 +21,10 @@ class CovidDataController(client: CovidDataClient) {
     }
 
     /**
+     * Fetches aggregated sum of datapoints across all rows for all numeric columns
+     */
+
+    /**
      * Attempt to get csv data from map. If not present, make
      * client request to fetch data from client.
      * @param date string - date in 'mm-dd-yyyy' format
