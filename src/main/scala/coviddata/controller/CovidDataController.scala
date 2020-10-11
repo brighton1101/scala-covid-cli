@@ -3,12 +3,13 @@ package coviddata.controller
 import coviddata.Csv
 import coviddata.client.CovidDataClient
 import coviddata.model.CovidDataByLocation
+import coviddata.model.AggregatedCovidData
 
 class CovidDataController(client: CovidDataClient) {
 
     // Store csv data keyed by 'date', in format 'mm-dd-yyyy'
     // avoids repeat lookups in case multiple operations needed.
-    val csvByDate = scala.collection.mutable.Map[String, Csv]()
+    val locationDataByDate = scala.collection.mutable.Map[String, Seq[CovidDataByLocation]]()
 
     /**
      * Fetches location data case classes based on date string provided.
@@ -16,8 +17,14 @@ class CovidDataController(client: CovidDataClient) {
      */
     def fetchLocationDataByDate(date: String): Option[Seq[CovidDataByLocation]] = {
         _fetchDataByDate(date)
-            .map(csv => 
-                csv.mapValsToObjs(CovidDataByLocation.fromCSSEGISandCsvRow))
+    }
+
+    /**
+     * Fetch aggregate data by date
+     */
+    def fetchAggregateDataByDate(date: String): Option[AggregatedCovidData] = {
+        _fetchDataByDate(date)
+            .flatMap(res => AggregatedCovidData.fromCovidDataLocationSeq(res))
     }
 
     /**
@@ -30,17 +37,19 @@ class CovidDataController(client: CovidDataClient) {
      * @param date string - date in 'mm-dd-yyyy' format
      * @return Option[Csv] containing data for that date
      */
-    private def _fetchDataByDate(date: String): Option[Csv] = {
-        csvByDate.get(date) match {
+    private def _fetchDataByDate(date: String): Option[Seq[CovidDataByLocation]] = {
+        locationDataByDate.get(date) match {
             case None => 
                 client
                     .dailyReportByDate(date)
-                    .map(res => {
-                        val csv = new Csv(res, dropHeader=true)
-                        csvByDate.put(date, csv)
-                        csv
+                    .map(res => new Csv(res, dropHeader=true))
+                    .map(csv => {
+                        val ld = csv.mapValsToObjs(CovidDataByLocation.fromCSSEGISandCsvRow)
+                        locationDataByDate.put(date, ld)
+                        ld
                     })
-            case Some(found: Csv) => Some(found)
+                    
+            case Some(found: Seq[CovidDataByLocation]) => Some(found)
         }
     }
 }

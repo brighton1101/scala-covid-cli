@@ -3,46 +3,62 @@ package coviddata.model
 case class AggregatedCovidData(
     country: String,
     updatedDateTime: String,
-    confirmed: Option[Double],
-    deaths: Option[Double],
-    recovered: Option[Double],
-    active: Option[Double],
-    totalPersonsTested: Option[Double],
-    averageMortalityRate: Option[Double],
-    averageTestingRate: Option[Double]
+    confirmed: Double,
+    deaths: Double,
+    recovered: Double,
+    active: Double,
+    totalPersonsTested: Double,
+    averageMortalityRate: Double,
+    averageTestingRate: Double
 )
 
 object AggregatedCovidData {
     def fromCovidDataLocationSeq(
         locationSeq: Seq[CovidDataByLocation],
         country: Option[String] = None): Option[AggregatedCovidData] = {
-        if (locationSeq.length < 1) None
-        else AggregatedCovidData._fromCovidLocationSeq(locationSeq, country)
+        _fromCovidDataLocationSeq(locationSeq, country)
     }
 
-    def _fromCovidLocationSeq(
+    def _fromCovidDataLocationSeq(
         locationSeq: Seq[CovidDataByLocation],
-        country: Option[String] = None): AggregatedCovidData = {
+        country: Option[String] = None): Option[AggregatedCovidData] = {
         // Filter results by country if specified
-        val filteredLocationSeq = 
+        val filteredLocationSeq: Seq[CovidDataByLocation] = 
             country
-                .flatMap(c => locationSeq.filter(l => l.country == c))
+                .map((c: String) =>
+                    locationSeq.filter((l: CovidDataByLocation) => l.country == c))
                 .getOrElse(locationSeq)
-        val (outCountry, outDate) = filteredLocationSeq.reduce((a, b) => a.country == b.country) match {
-            case true => (filteredLocationSeq(0).country, filteredLocationSeq(0).updatedDateTime)
-            case false => ("MIXED", "MIXED")
-        }
-        val aggrLocation = filteredLocationSeq
+        val len = filteredLocationSeq.length
+        val outCountry = 
+            if (len > 0 && filteredLocationSeq.forall(_.country == filteredLocationSeq.head.country))
+                filteredLocationSeq(0).country
+            else ""
+        val outDate =
+            if (len > 0 && filteredLocationSeq.forall(_.updatedDateTime == filteredLocationSeq.head.updatedDateTime))
+                filteredLocationSeq(0).updatedDateTime
+            else ""
+        val aggrLocation: Seq[Double] = filteredLocationSeq
             .map(a => 
-                Seq(a.confirmed.getOrElse(0), a.deaths.getOrElse(0), a.recovered.getOrElse(0),
-                    a.active.getOrElse(0), a.personsTested.getOrElse(0), a.mortalityRate.getOrElse(0), a.testingRate.getOrElse(0)))
-            .reduce((a, b) => a.zipWithIndex.map {
-                case (el, index) => el+b(ind)
+                Seq[Double](a.confirmed.getOrElse(0), a.deaths.getOrElse(0), a.recovered.getOrElse(0),
+                    a.active.getOrElse(0), a.personsTested.getOrElse(0), a.mortalityRate.getOrElse(0),
+                    a.testingRate.getOrElse(0)))
+            .reduce((a: Seq[Double], b: Seq[Double]) => a.zipWithIndex.map {
+                case (el: Double, index: Int) => el+b(index)
             })
-        AggregatedCovidData(
-            outCountry,
-            outDate,
-            
-        )
+        len match {
+            case 0 => None
+            case _ =>
+                Some(AggregatedCovidData(
+                    outCountry,
+                    outDate,
+                    aggrLocation(0),
+                    aggrLocation(1),
+                    aggrLocation(2),
+                    aggrLocation(3),
+                    aggrLocation(4),
+                    aggrLocation(5) / filteredLocationSeq.length,
+                    aggrLocation(6) / filteredLocationSeq.length
+                ))
+        }
     }
 }

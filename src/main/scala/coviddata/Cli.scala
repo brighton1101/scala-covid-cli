@@ -34,7 +34,7 @@ object Cli {
     val httpClient = new ScalajHttpClient
     val covidClient = new CSSEGISandCovidClient(httpClient)
     val controller = new CovidDataController(covidClient)
-    controller.fetchLocationDataByDate(date).get.foreach(a => println(a))
+    println(controller.fetchAggregateDataByDate(date).get)
   }
 
   def _parseDateOpt(date: String): Option[String] = {
