@@ -57,4 +57,9 @@ class AggregatedCovidDataSpec extends AnyFlatSpec with should.Matchers {
         res.country shouldBe "US"
         res.updatedDateTime shouldBe "random"
     }
+
+    it should "return none for empty seq" in {
+        val res = AggregatedCovidData.fromCovidDataLocationSeq(Seq(), Some("US"))
+        res shouldBe None
+    }
 }
