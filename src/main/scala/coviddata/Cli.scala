@@ -6,6 +6,7 @@ import java.time.format.DateTimeFormatter
 import coviddata.client.ScalajHttpClient
 import coviddata.client.CSSEGISandCovidClient
 import coviddata.controller.CovidDataController
+import coviddata.view.{View, ConsoleView, HtmlView}
 
 object Cli {
   val usage =
@@ -25,6 +26,8 @@ object Cli {
       case date if date.startsWith("-d=") =>
         options.put("date",
           _parseDateOpt(date).getOrElse(throw new Exception("Invalid date provided")))
+      case "-a" =>
+        options.put("showStateData", "true")
       case default => {
         println(s"Invalid option $default")
         System.exit(1)
@@ -34,7 +37,10 @@ object Cli {
     val httpClient = new ScalajHttpClient
     val covidClient = new CSSEGISandCovidClient(httpClient)
     val controller = new CovidDataController(covidClient)
-    println(controller.fetchAggregateDataByDate(date).get)
+    val stdata = controller.fetchLocationDataByDate(date)
+    val aggdat = controller.fetchAggregateDataByDate(date)
+    val view: View = new HtmlView(new ConsoleView(new View(date, stdata, aggdat), true))
+    view.show
   }
 
   def _parseDateOpt(date: String): Option[String] = {
