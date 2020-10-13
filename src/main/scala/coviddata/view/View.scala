@@ -8,7 +8,11 @@ import coviddata.model.AggregatedCovidData
  * @param {[type]} data:          Option[Seq[CovidDataByLocation]] [description]
  * @param {[type]} aggregateData: Option[AggregatedCovidData]       [description]
  */
-class View(val date: String, val data: Option[Seq[CovidDataByLocation]], val aggregateData: Option[AggregatedCovidData]) {
+class View(
+    val date: String,
+    val data: Option[Seq[CovidDataByLocation]],
+    val aggregateData: Option[AggregatedCovidData]) {
+    
     def show(): Unit = {}
 }
 

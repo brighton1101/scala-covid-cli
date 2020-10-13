@@ -1,43 +1,15 @@
 package coviddata.view
 
-class ConsoleView(view: View, showStateData: Boolean = false) extends ViewDecorator(view) {
+class StateDataConsoleView(view: View) extends ViewDecorator(view) {
     override def show(): Unit = {
         println(s"""
-        | COVID US Data Output
-        | Date: ${view.date}
-        |
-        | Aggregate Data:
-        | ${consoleAggregateView()}
-        |
         | State Data:
         | ${consoleStateDataView()}
         |""".stripMargin)
         super.show()
     }
 
-    def consoleAggregateView(): String = {
-        view.aggregateData match {
-            case Some(d) => s"""
-                | Confirmed Cases: ${d.confirmed}
-                | Deaths:          ${d.deaths}
-                | Recovered:       ${d.recovered}
-                | Active:          ${d.active}
-                | Persons Tested:  ${d.totalPersonsTested}
-                |""".stripMargin
-            case _ => s"""
-                | No aggregate data available
-                """.stripMargin
-        }
-    }
-
     def consoleStateDataView(): String = {
-        showStateData match {
-            case true => _consoleStateDataView()
-            case false => "Rerun with -a flag to show full state data output"
-        }
-    }
-
-    def _consoleStateDataView(): String = {
         val notApp = "Not Found"
         data match {
             case Some(d) => d.foldLeft("") {

@@ -6,7 +6,7 @@ import java.time.format.DateTimeFormatter
 import coviddata.client.ScalajHttpClient
 import coviddata.client.CSSEGISandCovidClient
 import coviddata.controller.CovidDataController
-import coviddata.view.{View, ConsoleView, HtmlView}
+import coviddata.view.{View, DefaultOutputView, StateDataConsoleView, AggregateDataConsoleView, HtmlView}
 
 object Cli {
   val usage =
@@ -28,6 +28,8 @@ object Cli {
           _parseDateOpt(date).getOrElse(throw new Exception("Invalid date provided")))
       case "-a" =>
         options.put("showStateData", "true")
+      case "-html" =>
+        options.put("html", "true")
       case default => {
         println(s"Invalid option $default")
         System.exit(1)
@@ -38,8 +40,17 @@ object Cli {
     val covidClient = new CSSEGISandCovidClient(httpClient)
     val controller = new CovidDataController(covidClient)
     val stdata = controller.fetchLocationDataByDate(date)
-    val aggdat = controller.fetchAggregateDataByDate(date)
-    val view: View = new HtmlView(new ConsoleView(new View(date, stdata, aggdat), true))
+    val aggdata = controller.fetchAggregateDataByDate(date)
+    val decoratedView = options
+      .toSeq
+      .foldLeft(new View(date, stdata, aggdata)) {
+          (view, optpair) => optpair match {
+            case ("showStateData", _) => new StateDataConsoleView(view)
+            case ("html", _) => new HtmlView(view)
+            case _ => view
+          }
+        }
+    val view = new DefaultOutputView(new AggregateDataConsoleView(decoratedView))
     view.show
   }
 
