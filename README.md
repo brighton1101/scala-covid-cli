@@ -1,6 +1,6 @@
 # US Covid 19 Data CLI
 
-### A simple CLI to fetch data from [John Hopkins' Center for Systems Science and Engineering COVID 19 datasets](https://github.com/CSSEGISandData/COVID-19)
+### A simple CLI to fetch data from [Johns Hopkins' Center for Systems Science and Engineering COVID 19 datasets](https://github.com/CSSEGISandData/COVID-19)
 
 Dependencies:
 - `sbt`
